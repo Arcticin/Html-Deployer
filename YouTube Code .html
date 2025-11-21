@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Code Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary: #e50914; 
+            --primary-hover: #b20710;
+            --bg-gradient: linear-gradient(135deg, #141e30, #243b55);
+            --glass-bg: rgba(0, 0, 0, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #fff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- CARD STYLE --- */
+        .app-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h1 { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            font-weight: 700; 
+            letter-spacing: 1px;
+            font-size: 1.5rem;
+        }
+
+        /* --- INPUTS --- */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .full-width { grid-column: span 2; }
+
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-size: 0.85rem; 
+            color: #ccc; 
+            font-weight: 600; 
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        select option { background: #222; color: #fff; }
+
+        /* --- BUTTONS --- */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn:disabled { background: #444; cursor: wait; transform: none; opacity: 0.7; }
+
+        /* --- OUTPUT AREA --- */
+        .output-wrapper {
+            margin-top: 20px;
+            position: relative;
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s ease;
+        }
+        .output-wrapper.show { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #50fa7b; /* Matrix Green */
+            font-family: 'Consolas', monospace;
+            padding: 15px;
+            resize: vertical;
+            font-size: 0.85rem;
+            white-space: pre;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            padding: 4px 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.3); }
+
+        #status { text-align: center; margin-top: 12px; font-size: 0.9rem; color: #ffcc00; min-height: 20px; }
+
+        /* Mobile */
+        @media (max-width: 500px) {
+            .input-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1><i class="fa-solid fa-code"></i> Player Code Generator</h1>
+
+    <div class="input-grid">
+        <div class="full-width">
+            <label>1. YouTube Playlist Link</label>
+            <input type="text" id="playlistUrl" placeholder="https://www.youtube.com/playlist?list=..." autocomplete="off">
+        </div>
+
+        <div class="full-width">
+            <label>2. Anime Name</label>
+            <input type="text" id="animeName" placeholder="Type Name (e.g. Naruto Shippuden)">
+        </div>
+
+        <div>
+            <label>3. Season</label>
+            <select id="seasonSelect"></select>
+        </div>
+
+        <div>
+            <label>4. Starting Episode</label>
+            <select id="episodeSelect"></select>
+        </div>
+    </div>
+
+    <button class="btn" id="generateBtn" onclick="generateCode()">Generate Code</button>
+    <div id="status"></div>
+
+    <div class="output-wrapper" id="outputWrapper">
+        <textarea id="finalCode" readonly></textarea>
+        <button class="copy-btn" onclick="copyCode()">Copy</button>
+    </div>
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    // Internal API Key
+    const API_KEY = 'AIzaSyA0UvSVI12NB4Ll6aTuPNODrKUs-MnlF9Y'; 
+
+    // --- INIT DROPDOWNS ---
+    window.onload = function() {
+        const seasonSel = document.getElementById('seasonSelect');
+        const epSel = document.getElementById('episodeSelect');
+
+        // Generate Season 1 - 50
+        for(let i=1; i<=50; i++) {
+            let opt = document.createElement('option');
+            opt.value = `Season ${i}`;
+            opt.innerText = `Season ${i}`;
+            seasonSel.appendChild(opt);
+        }
+
+        // Generate Episode 1 - 2000
+        for(let i=1; i<=2000; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = `Episode ${i}`;
+            epSel.appendChild(opt);
+        }
+    };
+
+    // --- MAIN GENERATOR LOGIC ---
+    async function generateCode() {
+        const playlistUrl = document.getElementById('playlistUrl').value.trim();
+        const animeName = document.getElementById('animeName').value.trim() || "Anime Name";
+        const seasonName = document.getElementById('seasonSelect').value;
+        const startEp = parseInt(document.getElementById('episodeSelect').value);
+        
+        const status = document.getElementById('status');
+        const btn = document.getElementById('generateBtn');
+        const outputWrapper = document.getElementById('outputWrapper');
+
+        // Regex to get Playlist ID
+        const regExp = /[?&]list=([^#\&\?]+)/;
+        const match = playlistUrl.match(regExp);
+
+        if (!match) {
+            status.innerText = "❌ Error: Invalid YouTube Playlist URL";
+            status.style.color = "#ff4d4d";
+            return;
+        }
+        
+        const playlistId = match[1];
+        
+        // Reset UI
+        btn.disabled = true;
+        status.innerText = "Fetching videos from YouTube...";
+        status.style.color = "#fff";
+        outputWrapper.classList.remove('show');
+
+        let videoIds = [];
+        let nextPageToken = '';
+        let keepFetching = true;
+
+        try {
+            // --- STEP 1: FETCH ALL VIDEOS ---
+            while(keepFetching) {
+                const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${playlistId}&key=${API_KEY}&pageToken=${nextPageToken}`;
+                
+                const res = await fetch(apiUrl);
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error.message);
+
+                data.items.forEach(item => {
+                    videoIds.push(item.contentDetails.videoId);
+                });
+
+                if (data.nextPageToken) nextPageToken = data.nextPageToken;
+                else keepFetching = false;
+            }
+
+            // --- STEP 2: FORMAT THE DATA ---
+            let formattedData = "";
+            
+            videoIds.forEach((id, index) => {
+                const currentEp = startEp + index;
+                const epLabel = `Episode ${currentEp}`;
+                
+                // Structure: { id: 'CODE', title: 'Anime Season Episode X', ep: 'Episode X' }
+                const titleStr = `${animeName} ${seasonName} ${epLabel}`;
+                
+                formattedData += `    { id: '${id}', title: '${titleStr}', ep: '${epLabel}' }`;
+                
+                // Add comma if not last item
+                if (index < videoIds.length - 1) formattedData += ",\n";
+            });
+
+            // --- STEP 3: INJECT INTO TEMPLATE ---
+            // Replaced old template with user's specific NEW template
+            const fullScript = getPlayerScript(formattedData);
+            
+            document.getElementById('finalCode').value = fullScript;
+            outputWrapper.classList.add('show');
+            status.innerText = `✅ Done! Generated code for ${videoIds.length} videos.`;
+            status.style.color = "#50fa7b";
+
+        } catch (error) {
+            status.innerText = "Error: " + error.message;
+            status.style.color = "#ff4d4d";
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function copyCode() {
+        const textArea = document.getElementById('finalCode');
+        textArea.select();
+        document.execCommand('copy');
+        alert("Full Code Copied!");
+    }
+
+    // --- THE NEW TEMPLATE ---
+    function getPlayerScript(dataArray) {
+        return `// --- Video Data ---
+const videos = [
+${dataArray}
+];
+
+const frame = document.getElementById('main-frame');
+const titleLabel = document.getElementById('main-title');
+const playlistBox = document.getElementById('playlist-box');
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('toggle-btn');
+const epCount = document.getElementById('ep-count');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+
+let currentIndex = 0;
+
+function init() {
+    epCount.textContent = \`\${videos.length} Videos\`;
+    
+    videos.forEach((video, index) => {
+        const item = document.createElement('div');
+        item.className = 'video-item';
+        item.style.animationDelay = \`\${index * 0.08}s\`;
+
+        if(index === 0) item.classList.add('active');
+        
+        item.innerHTML = \`
+            <div class="thumbnail">
+                <img src="https://img.youtube.com/vi/\${video.id}/mqdefault.jpg" alt="Thumb">
+                <div class="playing-anim">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                </div>
+            </div>
+            <div class="item-details">
+                <span class="item-ep">\${video.ep}</span>
+                <span class="item-title">\${video.title}</span>
+            </div>
+        \`;
+        
+        item.onclick = () => loadVideo(index);
+        playlistBox.appendChild(item);
+    });
+
+    loadVideo(0);
+}
+
+function loadVideo(index) {
+    currentIndex = index;
+    const video = videos[index];
+    frame.src = \`https://www.youtube.com/embed/\${video.id}?rel=0&autoplay=0&modestbranding=1\`;
+    titleLabel.textContent = \`\${video.ep} - \${video.title}\`;
+    
+    // Update active state
+    document.querySelectorAll('.video-item').forEach(el => el.classList.remove('active'));
+    playlistBox.children[index].classList.add('active');
+    
+    // Update Buttons
+    updateNavButtons();
+
+    // SCROLL FIX: Only scrolls the playlist container, not the whole page
+    const activeElem = playlistBox.children[index];
+    if(activeElem) {
+            const container = playlistBox;
+            // Calculate position to center the item in the scrollable area
+            const scrollPosition = activeElem.offsetTop - container.offsetTop - (container.clientHeight / 2) + (activeElem.clientHeight / 2);
+            container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+    }
+}
+
+function updateNavButtons() {
+    prevBtn.disabled = (currentIndex === 0);
+    nextBtn.disabled = (currentIndex === videos.length - 1);
+}
+
+function playPrevious() {
+    if (currentIndex > 0) {
+        loadVideo(currentIndex - 1);
+    }
+}
+
+function playNext() {
+    if (currentIndex < videos.length - 1) {
+        loadVideo(currentIndex + 1);
+    }
+}
+
+function toggleSidebar() {
+    sidebar.classList.toggle('collapsed');
+    toggleBtn.classList.add('rotated');
+    setTimeout(() => toggleBtn.classList.remove('rotated'), 400);
+
+    if (sidebar.classList.contains('collapsed')) {
+        toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Show List';
+    } else {
+        toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide List';
+    }
+}
+
+document.getElementById('theme-switch').addEventListener('change', (e) => {
+    document.documentElement.setAttribute('data-theme', e.target.checked ? 'light' : 'dark');
+});
+
+function shareLink() {
+    const url = window.location.href;
+    if (navigator.share) {
+        navigator.share({ title: 'Animeflix Hindi', text: \`Watch \${videos[currentIndex].title}\`, url: url }).catch(console.error);
+    } else {
+        document.getElementById('share-url').value = url;
+        const overlay = document.getElementById('share-modal');
+        overlay.style.display = 'flex';
+        setTimeout(() => document.getElementById('modal-box').classList.add('show'), 10);
+    }
+}
+
+function copyLink() {
+    const input = document.getElementById('share-url');
+    input.select();
+    document.execCommand('copy');
+    closeModal();
+    alert('Link Copied!');
+}
+
+function closeModal() {
+    const box = document.getElementById('modal-box');
+    box.classList.remove('show');
+    setTimeout(() => {
+        document.getElementById('share-modal').style.display = 'none';
+    }, 300);
+}
+
+init();`;
+    }
+</script>
+
+</body>
+</html>
