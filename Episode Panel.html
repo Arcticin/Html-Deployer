@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Animeflix Hindi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- Theme Variables --- */
+        :root {
+            /* DARK MODE (Default) - RED Theme */
+            --primary: #e50914;
+            --primary-rgb: 229, 9, 20; 
+            --btn-gradient: linear-gradient(135deg, #e50914, #ff4d4d);
+            
+            --bg-main: #141414;
+            --bg-sec: #1f1f1f;
+            --bg-card: #262626;
+            --text: #ffffff;
+            --text-sec: #b3b3b3;
+            --border: #333;
+            --hover: #333;
+        }
+
+        [data-theme="light"] {
+            /* LIGHT MODE - BLUE Theme */
+            --primary: #0066ff;
+            --primary-rgb: 0, 102, 255; 
+            --btn-gradient: linear-gradient(135deg, #0066ff, #3399ff);
+
+            --bg-main: #ffffff;
+            --bg-sec: #f4f6f8;
+            --bg-card: #ffffff;
+            --text: #000000;
+            --text-sec: #606060;
+            --border: #e0e0e0;
+            --hover: #e5e5e5;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background 0.4s, color 0.4s;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- Header --- */
+        nav {
+            height: 60px; padding: 0 20px;
+            background: var(--bg-main); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; z-index: 50;
+        }
+
+        .logo {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 1.4rem; font-weight: 800;
+            color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .logo span { color: var(--text); font-weight: 300; font-size: 1.1rem; }
+
+        /* Switch Toggle */
+        .switch { position: relative; width: 48px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* --- Main Layout --- */
+        .container { display: flex; flex: 1; overflow: hidden; }
+
+        .main-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+
+        .video-container {
+            position: relative; width: 100%; padding-bottom: 56.25%;
+            background: #000; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        .info-section { margin-top: 20px; }
+        .video-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 15px; line-height: 1.3; }
+
+        /* --- Actions Area --- */
+        .actions-bar {
+            display: flex; flex-direction: column; gap: 15px;
+            padding-bottom: 20px; border-bottom: 1px solid var(--border);
+        }
+
+        .channel-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .channel-info { display: flex; flex-direction: column; justify-content: center; }
+        .channel-info h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+        
+        .sub-text { 
+            font-size: 0.75rem; color: var(--primary); font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;
+        }
+
+        .join-btn {
+            background: var(--btn-gradient); color: white; border: none;
+            padding: 10px 24px; border-radius: 30px; font-weight: 700; font-size: 0.9rem;
+            text-align: center; white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
+            animation: pulse-glow 2s infinite; flex-shrink: 0; transition: transform 0.2s;
+        }
+        .join-btn:active { transform: scale(0.95); }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(var(--primary-rgb), 0); }
+            100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0); }
+        }
+
+        /* --- Navigation Buttons --- */
+        .nav-row { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
+        
+        .nav-btn {
+            flex: 1; background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
+            padding: 12px; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; 
+            font-weight: 700; font-size: 0.95rem; transition: all 0.3s ease;
+            position: relative; overflow: hidden; white-space: nowrap;
+        }
+
+        .nav-btn i { font-size: 1.1rem; transition: transform 0.3s; color: var(--text-sec); }
+        
+        .nav-btn:hover:not(:disabled) { 
+            background: var(--bg-main); border-color: var(--primary); color: var(--primary);
+            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .nav-btn:hover:not(:disabled) i { color: var(--primary); }
+        
+        #prev-btn:hover:not(:disabled) i { transform: translateX(-4px); }
+        #next-btn:hover:not(:disabled) i { transform: translateX(4px); }
+
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; background: var(--bg-sec); }
+
+        /* --- Utility Buttons --- */
+        .buttons-group { display: flex; gap: 10px; width: 100%; margin-top: 0px; }
+        .util-btn {
+            flex: 1; background: var(--bg-sec); color: var(--text); border: 1px solid var(--border);
+            padding: 10px; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; 
+            font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease;
+        }
+        .util-btn:hover { background: var(--hover); transform: translateY(-2px); }
+        .util-btn i { transition: transform 0.4s ease; }
+        .util-btn.rotated i { transform: rotate(180deg); }
+
+        .desc-text { margin-top: 15px; line-height: 1.6; color: var(--text); font-weight: 500; }
+        .disclaimer { display: block; margin-top: 8px; font-size: 0.75rem; color: var(--text-sec); font-style: italic; }
+
+        /* --- Sidebar --- */
+        .playlist-sidebar {
+            width: 420px; background: var(--bg-sec); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; /* Important for scroll calculation */
+        }
+        .playlist-sidebar.collapsed { width: 0; overflow: hidden; border: none; }
+        
+        .playlist-header { 
+            padding: 20px; border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; min-width: 420px; 
+        }
+        .playlist-content { flex: 1; overflow-y: auto; min-width: 420px; padding: 10px; position: relative; }
+
+        /* --- Video Item --- */
+        .video-item {
+            display: flex; gap: 15px; padding: 12px; cursor: pointer;
+            background: var(--bg-card); border-radius: 10px; margin-bottom: 10px;
+            border: 1px solid transparent; opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.5s forwards; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        .video-item:hover {
+            background: var(--bg-main); border-color: rgba(var(--primary-rgb), 0.3);
+            transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .video-item.active { background: rgba(var(--primary-rgb), 0.08); border-color: var(--primary); }
+        .video-item.active .item-title { color: var(--primary); }
+
+        .thumbnail {
+            width: 130px; height: 74px; border-radius: 6px; 
+            overflow: hidden; flex-shrink: 0; position: relative;
+        }
+        .thumbnail img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .video-item:hover .thumbnail img { transform: scale(1.1); }
+
+        .playing-anim {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; gap: 3px;
+        }
+        .video-item.active .playing-anim { display: flex; }
+        .bar { width: 4px; background: #fff; border-radius: 2px; animation: equalize 0.8s infinite; }
+        .bar:nth-child(1) { height: 12px; animation-delay: 0.1s; }
+        .bar:nth-child(2) { height: 20px; animation-delay: 0.2s; }
+        .bar:nth-child(3) { height: 14px; animation-delay: 0.3s; }
+        @keyframes equalize { 0%, 100% { height: 8px; } 50% { height: 22px; } }
+
+        .item-details { display: flex; flex-direction: column; justify-content: center; }
+        .item-ep { font-size: 0.75rem; color: var(--text-sec); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .item-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; transition: color 0.2s; }
+
+        /* --- Share Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: var(--bg-sec); padding: 25px; border-radius: 16px;
+            width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); transform: scale(0.9); opacity: 0; transition: all 0.3s ease;
+        }
+        .modal-box.show { transform: scale(1); opacity: 1; }
+        .link-input {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: var(--bg-main);
+            border: 1px solid var(--border); color: var(--text); border-radius: 8px; outline: none;
+        }
+        .close-modal { margin-top: 15px; background: transparent; border: none; color: var(--text-sec); cursor: pointer; font-size: 0.9rem; }
+
+        /* --- Responsive --- */
+        @media (max-width: 900px) {
+            body { height: auto; overflow-y: visible; }
+            .container { flex-direction: column; height: auto; }
+            
+            .playlist-sidebar { 
+                width: 100%; border-left: none; border-top: 1px solid var(--border); 
+                height: auto; background: var(--bg-main);
+            }
+            .playlist-sidebar.collapsed { height: 0; width: 100%; }
+            .playlist-header, .playlist-content { min-width: 100%; }
+            .playlist-content { max-height: 60vh; }
+            
+            .video-title { font-size: 1.25rem; margin-bottom: 10px; }
+            .video-item { padding: 10px; margin-bottom: 8px; }
+            
+            .nav-row { gap: 8px; }
+            .nav-btn { padding: 10px 6px; font-size: 0.8rem; gap: 6px; white-space: nowrap; }
+            .nav-btn i { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="https://anime.com" class="logo">
+            <i class="fa-solid fa-play"></i> Animeflix <span>Hindi</span>
+        </a>
+        <label class="switch">
+            <input type="checkbox" id="theme-switch">
+            <span class="slider"></span>
+        </label>
+    </nav>
+
+    <div class="container">
+        
+        <main class="main-area">
+            <div class="video-container">
+                <iframe id="main-frame" 
+                        src="" 
+                        title="Video player" 
+                        allowfullscreen
+                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                </iframe>
+            </div>
+
+            <div class="info-section">
+                <h1 id="main-title" class="video-title">Loading...</h1>
+                
+                <div class="actions-bar">
+                    <div class="channel-row">
+                        <div class="channel-info">
+                            <h4>Animeflix Hindi</h4>
+                            <span class="sub-text">Official Hindi Dubbed Anime</span>
+                        </div>
+                        <a href="https://joinnow.com" class="join-btn">Join Now</a>
+                    </div>
+
+                    <div class="nav-row">
+                        <button class="nav-btn" id="prev-btn" onclick="playPrevious()">
+                            <i class="fa-solid fa-backward-step"></i> Previous Episode
+                        </button>
+                        <button class="nav-btn" id="next-btn" onclick="playNext()">
+                            Next Episode <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                    </div>
+
+                    <div class="buttons-group">
+                        <button class="util-btn" onclick="shareLink()">
+                            <i class="fa-solid fa-share-nodes"></i> Share
+                        </button>
+                        <button class="util-btn" id="toggle-btn" onclick="toggleSidebar()">
+                            <i class="fa-solid fa-eye-slash"></i> Hide List
+                        </button>
+                    </div>
+                </div>
+
+                <p class="desc-text">
+                    Stream Official Hindi Dubbed Anime, Without Ads. Only on Animeflix Hindi.
+                    <span class="disclaimer">
+                        (We Don't own any Anime or Host any Anime Episodes, We Show just add Embbed link)
+                    </span>
+                </p>
+            </div>
+        </main>
+
+        <aside class="playlist-sidebar" id="sidebar">
+            <div class="playlist-header">
+                <h3>Episode List</h3>
+                <span style="font-size: 0.85rem; color: var(--text-sec);" id="ep-count">0 Videos</span>
+            </div>
+            <div class="playlist-content" id="playlist-box">
+                </div>
+        </aside>
+
+    </div>
+
+    <div class="modal-overlay" id="share-modal">
+        <div class="modal-box" id="modal-box">
+            <h3 style="color: var(--text); margin-bottom: 15px;">Share Episode</h3>
+            <input type="text" class="link-input" id="share-url" readonly>
+            <button class="join-btn" style="width:100%; animation:none;" onclick="copyLink()">Copy Link</button>
+            <button class="close-modal" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Video Data ---
+        const videos = [
+            { id: 'aqz-KE-bpFx', title: 'Big Buck Bunny', ep: 'Episode 1' },
+            { id: 'qC0vDKVPCrw', title: 'Sintel - The Journey', ep: 'Episode 2' },
+            { id: 'RBtQN0r61o', title: 'Tears of Steel', ep: 'Episode 3' },
+            { id: 'Q5im0Ssyyus', title: 'Cosmos Laundromat', ep: 'Episode 4' },
+            { id: 'WhWc3b3KhnY', title: 'Spring', ep: 'Episode 5' },
+            { id: 'mN0zPOpADL4', title: 'Coffee Run', ep: 'Episode 6' },
+            { id: 'wJPKq6I86q0', title: 'Glass Half', ep: 'Episode 7' },
+            { id: 'Y-rmzh0PI3c', title: 'Caminandes 3', ep: 'Episode 8' }
+        ];
+
+        const frame = document.getElementById('main-frame');
+        const titleLabel = document.getElementById('main-title');
+        const playlistBox = document.getElementById('playlist-box');
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const epCount = document.getElementById('ep-count');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        let currentIndex = 0;
+
+        function init() {
+            epCount.textContent = `${videos.length} Videos`;
+            
+            videos.forEach((video, index) => {
+                const item = document.createElement('div');
+                item.className = 'video-item';
+                item.style.animationDelay = `${index * 0.08}s`;
+
+                if(index === 0) item.classList.add('active');
+                
+                item.innerHTML = `
+                    <div class="thumbnail">
+                        <img src="https://img.youtube.com/vi/${video.id}/mqdefault.jpg" alt="Thumb">
+                        <div class="playing-anim">
+                            <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        </div>
+                    </div>
+                    <div class="item-details">
+                        <span class="item-ep">${video.ep}</span>
+                        <span class="item-title">${video.title}</span>
+                    </div>
+                `;
+                
+                item.onclick = () => loadVideo(index);
+                playlistBox.appendChild(item);
+            });
+
+            loadVideo(0);
+        }
+
+        function loadVideo(index) {
+            currentIndex = index;
+            const video = videos[index];
+            frame.src = `https://www.youtube.com/embed/${video.id}?rel=0&autoplay=0&modestbranding=1`;
+            titleLabel.textContent = `${video.ep} - ${video.title}`;
+            
+            // Update active state
+            document.querySelectorAll('.video-item').forEach(el => el.classList.remove('active'));
+            playlistBox.children[index].classList.add('active');
+            
+            // Update Buttons
+            updateNavButtons();
+
+            // FIXED: Scroll *internal* container only (Prevent page jumping)
+            const activeElem = playlistBox.children[index];
+            if(activeElem) {
+                 const container = playlistBox;
+                 const scrollPosition = activeElem.offsetTop - container.offsetTop - (container.clientHeight / 2) + (activeElem.clientHeight / 2);
+                 container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+            }
+        }
+
+        function updateNavButtons() {
+            prevBtn.disabled = (currentIndex === 0);
+            nextBtn.disabled = (currentIndex === videos.length - 1);
+        }
+
+        function playPrevious() {
+            if (currentIndex > 0) {
+                loadVideo(currentIndex - 1);
+            }
+        }
+
+        function playNext() {
+            if (currentIndex < videos.length - 1) {
+                loadVideo(currentIndex + 1);
+            }
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.add('rotated');
+            setTimeout(() => toggleBtn.classList.remove('rotated'), 400);
+
+            if (sidebar.classList.contains('collapsed')) {
+                toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Show List';
+            } else {
+                toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide List';
+            }
+        }
+
+        document.getElementById('theme-switch').addEventListener('change', (e) => {
+            document.documentElement.setAttribute('data-theme', e.target.checked ? 'light' : 'dark');
+        });
+
+        function shareLink() {
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({ title: 'Animeflix Hindi', text: `Watch ${videos[currentIndex].title}`, url: url }).catch(console.error);
+            } else {
+                document.getElementById('share-url').value = url;
+                const overlay = document.getElementById('share-modal');
+                overlay.style.display = 'flex';
+                setTimeout(() => document.getElementById('modal-box').classList.add('show'), 10);
+            }
+        }
+
+        function copyLink() {
+            const input = document.getElementById('share-url');
+            input.select();
+            document.execCommand('copy');
+            closeModal();
+            alert('Link Copied!');
+        }
+
+        function closeModal() {
+            const box = document.getElementById('modal-box');
+            box.classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('share-modal').style.display = 'none';
+            }, 300);
+        }
+
+        init();
+    </script>
+</body>
+</html>
